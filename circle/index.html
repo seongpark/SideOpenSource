@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동그라미 그리기 평가</title>
+    <style>
+        #canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 20px auto;
+        }
+
+        #timer {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        #score {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas" width="400" height="400"></canvas>
+<div id="timer">남은 시간: <span id="timeLeft">3.000</span>초</div>
+<div id="score">점수: <span id="circleScore">0</span>/100</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let startX, startY;
+    let isComplete = false;
+    let timeLeft = 3.000;
+    let startTime;
+    let requestId;
+
+    // 그리기 시작
+    canvas.addEventListener('mousedown', function (e) {
+        if (timeLeft > 0) { // 시간 안에만 그리기 가능
+            drawing = true;
+            startX = e.offsetX;
+            startY = e.offsetY;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+        }
+    });
+
+    // 그리기 중
+    canvas.addEventListener('mousemove', function (e) {
+        if (drawing && timeLeft > 0) {
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+        }
+    });
+
+    // 그리기 완료 시 자동 평가
+    canvas.addEventListener('mouseup', function () {
+        if (drawing) {
+            drawing = false;
+            isComplete = true; // 동그라미 그리기 완료
+            evaluateCircle();  // 그리기 완료되면 바로 평가
+            cancelAnimationFrame(requestId); // 타이머 중지
+        }
+    });
+
+    // 평가 함수
+    function evaluateCircle() {
+        if (!isComplete) {
+            alert('탈락! 3초 안에 동그라미를 다 그리지 못했습니다.');
+            return;
+        }
+
+        // 캔버스에서 이미지를 가져와 분석
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let pixelCount = 0;
+        let radiusSum = 0;
+        let centerX = canvas.width / 2;
+        let centerY = canvas.height / 2;
+
+        // 각 픽셀을 검사하여 원의 중심에서 거리 측정
+        for (let y = 0; y < canvas.height; y++) {
+            for (let x = 0; x < canvas.width; x++) {
+                const index = (y * canvas.width + x) * 4;
+                const r = imgData.data[index];
+                const g = imgData.data[index + 1];
+                const b = imgData.data[index + 2];
+                const alpha = imgData.data[index + 3];
+
+                if (r === 0 && g === 0 && b === 0 && alpha === 255) { // 검은색 픽셀일 경우
+                    pixelCount++;
+                    const distance = Math.sqrt(
+                        (x - centerX) * (x - centerX) + (y - centerY) * (y - centerY)
+                    );
+                    radiusSum += distance;
+                }
+            }
+        }
+
+        // 평균 거리(반지름)를 이용해 점수 계산
+        const averageRadius = radiusSum / pixelCount;
+        const idealRadius = canvas.width / 2; // 이상적인 원 반지름
+        const difference = Math.abs(idealRadius - averageRadius);
+        const maxScore = 100;
+        const score = Math.max(0, maxScore - difference);
+
+        // 점수 표시
+        document.getElementById('circleScore').innerText = Math.round(score);
+        alert('평가 완료! 점수는 ' + Math.round(score) + '입니다.');
+    }
+
+    // 타이머 함수
+    function updateTimer() {
+        const now = performance.now();
+        const elapsed = (now - startTime) / 1000;
+        timeLeft = Math.max(0, 3 - elapsed);
+        document.getElementById('timeLeft').innerText = timeLeft.toFixed(3);
+
+        if (timeLeft > 0) {
+            requestId = requestAnimationFrame(updateTimer);
+        } else {
+            if (!isComplete) { // 시간이 다 지나고 동그라미를 다 그리지 못했을 경우 탈락 처리
+                evaluateCircle();
+            }
+        }
+    }
+
+    // 시작 함수
+    function startEvaluation() {
+        isComplete = false; // 초기화
+        timeLeft = 3.000;
+        document.getElementById('timeLeft').innerText = timeLeft.toFixed(3);
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 캔버스 초기화
+        startTime = performance.now(); // 타이머 시작 시간 기록
+        updateTimer(); // 타이머 업데이트 시작
+    }
+
+    // 자동으로 시작
+    startEvaluation(); // 페이지 로드 시 자동으로 평가 시작
+</script>
+
+</body>
+</html>
