@@ -6,6 +6,20 @@
 * Apache2
 * MySQL
 
+# 디렉토리
+* admin : 관리자 페이지
+* alert : 회원 알림 
+* assets : 소스
+* dday : 디데이 기능
+* login : 로그인 페이지
+* menu : 메뉴 탭
+* messanger : M신저
+* notice : 명륜알림판
+* student : 모바일 학생증
+* term : 약관
+* time : 급식/시간표
+* umbrella : 우산대여제
+
 # DB 구조
 <a href="https://ibb.co/wQR1TcL"><img src="https://i.ibb.co/6tm52XZ/Untitled-1.png" alt="Untitled-1" border="0" width="100%"></a>
 
@@ -20,3 +34,4 @@
 * umbrellaOpen : 우산대여제 시작 여부 저장
 * umbrellaList : 우산 상태 저장
 * umbrellaBlack : 우산대여제 대여제한 내역 저장
+
